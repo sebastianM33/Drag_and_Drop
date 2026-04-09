@@ -59,6 +59,13 @@ header {
   width: 100%;
 }
 
+.controles-globales {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: space-between;
+}
+
 .title-tablero {
   font-size: 1.5rem;
   font-weight: 800;
@@ -114,6 +121,17 @@ header {
   display: flex;
   gap: 1rem;
   margin-left: auto;
+}
+
+/* Botón Hamburgesa oculto por defecto */
+.btn-menu {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--borde-sutil);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 button {
@@ -257,10 +275,9 @@ button {
   margin-top: 0.5rem;
 }
 
-.p-alta {
-  background-color: var(--peligro);
-  color: var(--acento-texto);
-}
+.p-alta { background-color: var(--peligro); color: var(--acento-texto);}
+.p-media { background-color: var(--advertencia); color: black; }
+.p-baja { background-color: var(--exito); color: black; }
 
 .contenido-tarjeta {
   font-size: 0.9rem;
@@ -286,3 +303,132 @@ button {
   border: 1.5px solid var(--acento);
   border-radius: 13px;
 }
+
+/* --- MEDIA QUERIES PARA RESPONSIVIDAD --- */
+
+/* Tablets y Laptops Pequeñas */
+@media (max-width: 1024px) {
+  .container-principal {
+    gap: 1rem;
+  }
+  
+  .select-proyecto {
+    min-width: 180px;
+  }
+}
+
+/* Móviles (Pantallas medianas y pequeñas) */
+@media (max-width: 768px) {
+  header {
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: var(--fondo-cuerpo);
+    border-bottom: 1px solid var(--borde-sutil);
+  }
+
+  .btn-menu {
+    display: flex;
+    order: 2; /* Ahora el botón va después del título */
+  }
+
+  .container-principal {
+    flex-direction: row; /* En línea para el botón y el título */
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+  }
+
+  .title-tablero {
+    justify-content: flex-start; /* Alineado a la izquierda */
+    flex: 1;
+    font-size: 1.5rem;
+    order: 1; /* Ahora el título va primero */
+  }
+
+  .controles-globales {
+    display: none; /* Oculto por defecto */
+    position: absolute;
+    top: calc(100% + 1rem);
+    left: 0;
+    width: 100%;
+    background-color: var(--fondo-columna);
+    flex-direction: column;
+    padding: 1.5rem;
+    gap: 1.5rem;
+    border-radius: 0 0 var(--radio) var(--radio);
+    border: 1px solid var(--borde-sutil);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    z-index: 999;
+  }
+
+  .controles-globales.active {
+    display: flex; /* Se muestra con la clase active */
+  }
+
+  .controles-proyecto {
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .select-proyecto {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .btn-primario, .btn-secundario, .btn-peligro {
+    width: 100%;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .controles-derecha {
+    margin-left: 0;
+    width: 100%;
+    border-top: 1px solid var(--borde-sutil);
+    padding-top: 1rem;
+  }
+
+  .contenedor-tablero {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 2rem;
+  }
+
+  .columna-tablero {
+    min-width: unset;
+    width: 100%;
+    max-height: none; /* Dejamos que crezca según el contenido */
+  }
+
+  .cabecera-columna {
+    margin-bottom: 1.2rem;
+    position: sticky;
+    top: 0;
+    background-color: var(--fondo-columna);
+    padding: 0.5rem 0;
+    z-index: 5;
+  }
+
+  .lista-tareas {
+    overflow-y: visible; /* El scroll será el de la página principal */
+  }
+
+  .tarjeta {
+    padding: 1.2rem;
+  }
+}
+
+/* Pantallas Extra Pequeñas */
+@media (max-width: 480px) {
+  .title-tablero {
+    font-size: 1.5rem;
+  }
+
+  .title-button-tablero {
+    font-size: 1rem;
+  }
+}
