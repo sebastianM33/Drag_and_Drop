@@ -33,7 +33,7 @@
                         </button>
                             
                         <!-- Botón del modal de nuevo Proyecto -->
-                        <button  class="btn-secundario" onclick="abrirModalCarpeta()" title="Crear Nueva Carpeta">
+                        <button  class="btn-secundario" onclick="abrirModalProyecto()" title="Crear Nueva Carpeta">
                             <h1 class="title-button-tablero">
                                 <div>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-plus-icon lucide-folder-plus"><path d="M12 10v6"/><path d="M9 13h6"/><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
@@ -94,6 +94,66 @@
                     <span class="contador-tareas">0</span>
                 </div>
             </div> -->
+        </div>
+        <!-- MODAL PROYECTO -->
+        <div class="capa-modal" id="modalProyecto">
+            <div class="modal">
+                <h2>📂 Nuevo Proyecto</h2>
+                <div class="grupo-formulario">
+                    <label>NOMBRE DEL PROYECTO</label>
+                    <input type="text" id="nombreNuevoProyecto" class="input-formulario" placeholder="Ej: Rediseño Web...">
+                </div>
+                <div class="acciones-modal">
+                    <button onclick="cerrarModal('modalProyecto')" style="background:transparent; color: var(--texto-secundario); border: none; cursor:pointer; font-weight:600;">Cancelar</button>
+                    <button class="btn-primario" onclick="crearProyecto()">Crear Proyecto</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL TAREA -->
+        <div class="capa-modal" id="modalTarea">
+            <div class="modal">
+                <h2>📝 Nueva Tarea</h2>
+                <div class="grupo-formulario">
+                    <label>DESCRIPCIÓN</label>
+                    <input type="text" id="contenidoNuevaTarea" class="input-formulario" placeholder="Ej: Arreglar login...">
+                </div>
+                
+                <div class="fila-formulario">
+                    <div class="grupo-formulario">
+                        <label>RESPONSABLE</label>
+                        <input type="text" id="responsableNuevaTarea" class="input-formulario" placeholder="Ej: Yo...">
+                    </div>
+                    <div class="grupo-formulario">
+                        <label>PRIORIDAD</label>
+                        <select id="prioridadNuevaTarea" class="input-formulario">
+                            <option value="baja">Baja</option>
+                            <option value="media">Media</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="fila-formulario">
+                    <div class="grupo-formulario">
+                        <label>VENCE EL</label>
+                        <input type="date" id="fechaNuevaTarea" class="input-formulario">
+                    </div>
+                    <div class="grupo-formulario">
+                        <label>ESTADO INICIAL</label>
+                        <select id="estadoNuevaTarea" class="input-formulario">
+                            <option value="por-hacer">Por Hacer</option>
+                            <option value="en-proceso">En Progreso</option>
+                            <option value="terminado">Terminado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="acciones-modal">
+                    <button onclick="cerrarModal('modalTarea')" style="background:transparent; color: var(--texto-secundario); border: none; cursor:pointer; font-weight:600;">Cancelar</button>
+                    <button class="btn-primario" onclick="guardarNuevaTarea()">Guardar Tarea</button>
+                </div>
+            </div>
         </div>
     </body>
     <script src="script.js"></script>

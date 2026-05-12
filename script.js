@@ -1,120 +1,264 @@
-// --- JAVASCRIPT (Fase 2: Renderizado) ---
+// --- JAVASCRIPT: LÓGICA COMPLETA DE OVERDRIVE ---
 
-// 1. Configuración: Definimos las columnas fijas
-// CORRECCIÓN: Nombres de clases actualizados para coincidir con tu CSS (.estado-en-progreso, .estado-completado)
+// 1. CONFIGURACIÓN
 const COLUMNAS_FIJAS = [
     { id: 'por-hacer', titulo: 'Por Hacer', claseColor: 'estado-por-hacer' },
     { id: 'en-proceso', titulo: 'En Progreso', claseColor: 'estado-en-progreso' },
     { id: 'terminado', titulo: 'Completado', claseColor: 'estado-completado' }
 ];
 
-// 2. Datos de Prueba (Simulando una base de datos)
-const proyectos = [
-    { id: 'proy-1', nombre: 'Mi Primer Proyecto' }
+// 2. DATOS INICIALES (SEMILLA)
+const proyectosPorDefecto = [
+    { id: 'proy-1', nombre: '🚀 Mi Primer Overdrive' }
 ];
 
-const tareas = [
+const tareasPorDefecto = [
     { 
         id: 't1', 
         idProyecto: 'proy-1', 
         estado: 'por-hacer', 
-        contenido: 'Diseñar la UI', 
+        contenido: 'Estrenar el tablero', 
         prioridad: 'alta', 
-        responsable: 'Yo'
-    },
-    { 
-        id: 't2', 
-        idProyecto: 'proy-1', 
-        estado: 'en-proceso', 
-        contenido: 'Aprender JavaScript', 
-        prioridad: 'media', 
-        responsable: 'Seba'
+        responsable: 'Yo',
+        fechaVencimiento: '2025-12-31'
     }
 ];
 
-let idProyectoActual = 'proy-1'; // Proyecto seleccionado por defecto
+// 3. GESTIÓN DE ESTADO (LOCALSTORAGE)
+function cargarDatos(clave, valorPorDefecto) {
+    try {
+        const datos = JSON.parse(localStorage.getItem(clave));
+        return Array.isArray(datos) ? datos : valorPorDefecto;
+    } catch (e) { return valorPorDefecto; }
+}
 
-// 3. Referencias al HTML
-// CORRECCIÓN: Asegúrate de que tu contenedor principal en HTML tenga id="tablero"
+let proyectos = cargarDatos('overdrive-proyectos', proyectosPorDefecto);
+let tareas = cargarDatos('overdrive-tareas', tareasPorDefecto);
+
+let idProyectoActual = proyectos[0]?.id || ''; 
+let itemArrastrado = null;
+
+// 4. REFERENCIAS DOM
 const tablero = document.getElementById('tablero');
+const selectProyecto = document.getElementById('selectProyecto');
 
-// 4. Función Principal: Renderizar (Pintar) el Tablero
-function renderizarTablero() {
-    console.log("Renderizando tablero..."); 
-
-    // Verificamos que el tablero exista antes de intentar limpiarlo
-    if (!tablero) {
-        console.error("No se encontró el elemento con id='tablero' en el HTML");
-        return;
+// 5. INICIALIZACIÓN
+function iniciar() {
+    renderizarSelectProyecto();
+    if (!idProyectoActual && proyectos.length > 0) {
+        idProyectoActual = proyectos[0].id;
     }
+    renderizarTablero();
+}
 
-    tablero.innerHTML = ''; // Limpiamos el tablero antes de pintar
+// 6. RENDERIZADO (VISTA)
+function renderizarSelectProyecto() {
+    if (!selectProyecto) return;
+    selectProyecto.innerHTML = '';
+    proyectos.forEach(proy => {
+        const opcion = document.createElement('option');
+        opcion.value = proy.id;
+        opcion.textContent = proy.nombre;
+        if (proy.id === idProyectoActual) opcion.selected = true;
+        selectProyecto.appendChild(opcion);
+    });
+    if (proyectos.length === 0) selectProyecto.innerHTML = '<option>--- Sin Proyectos ---</option>';
+}
 
-    // Recorremos las columnas configuradas
+function renderizarTablero() {
+    if (!tablero) return;
+    tablero.innerHTML = ''; // Limpiar
+
+    if (!idProyectoActual) return;
+
     COLUMNAS_FIJAS.forEach(columna => {
-        // A. Creamos el contenedor de la columna
         const divColumna = document.createElement('div');
-        // CORRECCIÓN: Cambiado de 'columna' a 'columna-tablero' para coincidir con tu CSS
-        divColumna.className = 'columna-tablero'; 
+        divColumna.className = 'columna-tablero';
         divColumna.id = columna.id;
 
-        // B. Filtramos las tareas que van en ESTA columna y ESTE proyecto
-        const tareasDeLaColumna = tareas.filter(t => 
+        const tareasFiltradas = tareas.filter(t => 
             t.estado === columna.id && t.idProyecto === idProyectoActual
         );
 
-        // C. Construimos el HTML interno de la columna
         divColumna.innerHTML = `
             <div class="cabecera-columna">
                 <span class="titulo-columna">
                     <span class="punto-estado ${columna.claseColor}"></span>
                     ${columna.titulo}
                 </span>
-                <span class="contador-tareas">${tareasDeLaColumna.length}</span>
+                <span class="contador-tareas">${tareasFiltradas.length}</span>
             </div>
             <div class="lista-tareas"></div>
         `;
 
-        // D. Inyectamos las tarjetas dentro de la lista
         const contenedorLista = divColumna.querySelector('.lista-tareas');
-        
-        tareasDeLaColumna.forEach(tarea => {
-            const htmlTarjeta = crearHTMLTarjeta(tarea);
-            contenedorLista.appendChild(htmlTarjeta);
+        configurarZonaSoltar(contenedorLista, columna.id);
+
+        tareasFiltradas.forEach(tarea => {
+            contenedorLista.appendChild(crearHTMLTarjeta(tarea));
         });
 
-        // E. Agregamos la columna terminada al tablero
         tablero.appendChild(divColumna);
     });
 }
 
-// 5. Función auxiliar para crear el diseño de la tarjeta
 function crearHTMLTarjeta(tarea) {
-    const tarjeta = document.createElement('div');
-    tarjeta.className = 'tarjeta';
-    tarjeta.id = tarea.id;
+    const el = document.createElement('div');
+    el.className = 'tarjeta';
+    el.id = tarea.id;
+    el.draggable = true;
 
-    // Colores de prioridad dinámicos
-    let clasePrioridad = 'p-media';
-    if (tarea.prioridad === 'alta') clasePrioridad = 'p-alta';
-    if (tarea.prioridad === 'baja') clasePrioridad = 'p-baja';
+    if (tarea.estado === 'terminado') el.classList.add('completada');
 
-    tarjeta.innerHTML = `
-        <div class="cabecera-tarjeta">
-            <span class="etiqueta-prioridad ${clasePrioridad}">${tarea.prioridad.toUpperCase()}</span>
+    let claseP = 'p-media';
+    if (tarea.prioridad === 'alta') claseP = 'p-alta';
+    if (tarea.prioridad === 'baja') claseP = 'p-baja';
+
+    let htmlFecha = '';
+    if (tarea.fechaVencimiento) {
+        htmlFecha = `<span style="display:flex; align-items:center; gap:4px; font-size:0.75rem; color:var(--peligro)">
+            📅 ${tarea.fechaVencimiento}
+        </span>`;
+    }
+
+    el.innerHTML = `
+        <div class="cabecera-tarjeta" style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="etiqueta-prioridad ${claseP}">${tarea.prioridad.toUpperCase()}</span>
+            <button class="btn-eliminar-tarea" onclick="eliminarTarea('${tarea.id}', event)">×</button>
         </div>
         <div class="contenido-tarjeta">${tarea.contenido}</div>
         <div class="meta-tarjeta">
-            <span class="etiqueta-responsable">👤 ${tarea.responsable}</span>
+            ${htmlFecha}
+            <span class="etiqueta-responsable">👤 ${tarea.responsable || 'Sin asignar'}</span>
         </div>
     `;
 
-    return tarjeta;
+    // Eventos Drag
+    el.addEventListener('dragstart', (e) => {
+        itemArrastrado = tarea;
+        e.target.classList.add('arrastrando');
+        e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', (e) => {
+        e.target.classList.remove('arrastrando');
+        itemArrastrado = null;
+        document.querySelectorAll('.lista-tareas').forEach(l => l.classList.remove('drag-over'));
+    });
+
+    return el;
 }
 
-// 6. ¡Arrancar motores! Ejecutamos la función al cargar
-document.addEventListener('DOMContentLoaded', () => {
+// 7. DRAG & DROP LOGIC
+function configurarZonaSoltar(elemento, nuevoEstado) {
+    elemento.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        elemento.classList.add('drag-over');
+    });
+    elemento.addEventListener('dragleave', (e) => {
+        elemento.classList.remove('drag-over');
+    });
+    elemento.addEventListener('drop', (e) => {
+        e.preventDefault();
+        elemento.classList.remove('drag-over');
+        if (itemArrastrado) {
+            const idx = tareas.findIndex(t => t.id === itemArrastrado.id);
+            if (idx > -1) {
+                tareas[idx].estado = nuevoEstado;
+                guardarTareas();
+                renderizarTablero();
+            }
+        }
+    });
+}
+
+// 8. CONTROLADORES (ACCIONES)
+function cambiarProyecto(id) {
+    idProyectoActual = id;
     renderizarTablero();
+}
+
+function crearProyecto() {
+    const nombre = document.getElementById('nombreNuevoProyecto').value.trim();
+    if (nombre) {
+        const nuevo = { id: 'proy-' + Date.now(), nombre: nombre };
+        proyectos.push(nuevo);
+        idProyectoActual = nuevo.id;
+        guardarProyectos();
+        renderizarSelectProyecto();
+        renderizarTablero();
+        cerrarModal('modalProyecto');
+        document.getElementById('nombreNuevoProyecto').value = '';
+    }
+}
+
+function guardarNuevaTarea() {
+    if (!idProyectoActual) return alert("Crea un proyecto primero");
+    
+    const contenido = document.getElementById('contenidoNuevaTarea').value.trim();
+    const resp = document.getElementById('responsableNuevaTarea').value.trim();
+    const prio = document.getElementById('prioridadNuevaTarea').value;
+    const fecha = document.getElementById('fechaNuevaTarea').value;
+    const est = document.getElementById('estadoNuevaTarea').value;
+
+    if (contenido) {
+        const nueva = {
+            id: 'tarea-' + Date.now(),
+            idProyecto: idProyectoActual,
+            estado: est,
+            contenido: contenido,
+            prioridad: prio,
+            responsable: resp,
+            fechaVencimiento: fecha
+        };
+        tareas.push(nueva);
+        guardarTareas();
+        renderizarTablero();
+        cerrarModal('modalTarea');
+        
+        // Limpiar
+        document.getElementById('contenidoNuevaTarea').value = '';
+        document.getElementById('responsableNuevaTarea').value = '';
+        document.getElementById('fechaNuevaTarea').value = '';
+    }
+}
+
+function eliminarTarea(id, e) {
+    e.stopPropagation();
+    if(confirm("¿Borrar tarea?")) {
+        tareas = tareas.filter(t => t.id !== id);
+        guardarTareas();
+        renderizarTablero();
+    }
+}
+
+function resetearTodo() {
+    if(confirm("⚠ ¡Se borrará TODO!")) {
+        localStorage.removeItem('overdrive-proyectos');
+        localStorage.removeItem('overdrive-tareas');
+        location.reload();
+    }
+}
+
+// 9. PERSISTENCIA
+function guardarProyectos() { localStorage.setItem('overdrive-proyectos', JSON.stringify(proyectos)); }
+function guardarTareas() { localStorage.setItem('overdrive-tareas', JSON.stringify(tareas)); }
+
+// 10. MODALES
+function abrirModalProyecto() { 
+    document.getElementById('modalProyecto').classList.add('activo'); 
+    document.getElementById('nombreNuevoProyecto').focus();
+}
+function abrirModalTarea() { 
+    document.getElementById('modalTarea').classList.add('activo'); 
+    document.getElementById('contenidoNuevaTarea').focus();
+}
+function cerrarModal(id) { document.getElementById(id).classList.remove('activo'); }
+
+window.onclick = (e) => { if(e.target.classList.contains('capa-modal')) e.target.classList.remove('activo'); }
+
+// INICIAR Y GESTIONAR EVENTOS DOM
+document.addEventListener('DOMContentLoaded', () => {
+    iniciar();
     
     // Lógica para el menú desplegable en móvil
     const menuToggle = document.getElementById('menuToggle');
@@ -144,7 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Para el select, cerramos solo cuando se cambie la opción
-        const selectProyecto = document.getElementById('selectProyecto');
         if (selectProyecto) {
             selectProyecto.addEventListener('change', () => {
                 if (window.innerWidth <= 768) {
