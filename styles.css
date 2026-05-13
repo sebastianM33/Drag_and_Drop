@@ -87,7 +87,6 @@ header {
 /* Icono Zap (Rayo) personalizado */
 .icono-rayo {
   color: var(--acento);
-  border-color: var(--acento);
 }
 
 .icono-rayo svg {
@@ -257,6 +256,7 @@ button {
   flex-direction: column;
   gap: 1rem;
   padding-right: 0.5rem; /* espacio para el scrollbar */
+  min-height: 120px; /* Área mínima para poder soltar tareas cuando está vacía */
 }
 
 .tarjeta{
@@ -265,7 +265,8 @@ button {
   padding: 1rem;
   box-shadow: var(--sombra);
   cursor: grab;
-  transition: transform 0.2s;
+  transition: transform 0.2s, border-color 0.2s;
+  border: 1px solid transparent;
 }
 
 .cabecera-tarjeta {
@@ -501,7 +502,8 @@ button {
   }
 
   .lista-tareas {
-    overflow-y: visible; /* El scroll será el de la página principal */
+    overflow-y: auto; 
+    max-height: 280px; /* Mostrar máximo 2 tarjetas aproximadamente */
   }
 
   .tarjeta {
@@ -518,4 +520,4 @@ button {
   .title-button-tablero {
     font-size: 1rem;
   }
-}
+}
